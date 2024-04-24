@@ -9,7 +9,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String webClientId = '264994690136-4t5u4r9bbu0s680gscbr8r1dsbj0mlku.apps.googleusercontent.com';
-    final String backendUrl = 'your_backend_url';
+    final String backendUrl = 'http://192.168.1.10:5000/verify-token';
 
 final GoogleSignInService googleSignInService = GoogleSignInService(webClientId, backendUrl);
 
