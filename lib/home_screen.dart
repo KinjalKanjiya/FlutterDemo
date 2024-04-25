@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'api/google_sign_in_service.dart';
 import 'sign_in_screen.dart';
+
+
 class HomeScreen extends StatelessWidget {
   final String displayName;
 
@@ -11,7 +13,7 @@ class HomeScreen extends StatelessWidget {
     final String webClientId = '264994690136-4t5u4r9bbu0s680gscbr8r1dsbj0mlku.apps.googleusercontent.com';
     final String backendUrl = 'http://192.168.1.10:5000/verify-token';
 
-final GoogleSignInService googleSignInService = GoogleSignInService(webClientId, backendUrl);
+    final GoogleSignInService googleSignInService = GoogleSignInService(webClientId, backendUrl);
 
     return Scaffold(
       appBar: AppBar(
@@ -21,8 +23,15 @@ final GoogleSignInService googleSignInService = GoogleSignInService(webClientId,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            ElevatedButton(
+              onPressed: () async {
+                await googleSignInService.getCurrentLocation();
+
+              },
+              child: Text('Get Location'),
+            ),
             Text('User details here'), // Display user details here
-          ElevatedButton(
+            ElevatedButton(
               onPressed: () async {
                 await googleSignInService.signOut(); // Sign out the user
                 Navigator.pushReplacement( // Navigate back to sign-in screen

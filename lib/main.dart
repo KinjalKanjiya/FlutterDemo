@@ -9,7 +9,7 @@ void main() {
 
 class MyApp extends StatelessWidget {
   final String webClientId = '264994690136-4t5u4r9bbu0s680gscbr8r1dsbj0mlku.apps.googleusercontent.com';
-final String backendUrl = "http://192.168.1.10:5000/verify-token";
+final String backendUrl = "http://192.168.1.7:5000/auth/google";
   @override
   Widget build(BuildContext context) {
 final GoogleSignInService _googleSignInService = GoogleSignInService(webClientId, backendUrl);
