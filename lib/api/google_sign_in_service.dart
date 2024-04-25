@@ -23,7 +23,6 @@ class GoogleSignInService {
       if (googleUser != null) {
         final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
         // print("Google ID Token: ${googleAuth.idToken}"); // Log the Google ID Token
-        await verifyToken(googleAuth.idToken!); // Verify the token
 
         await sendTokenToBackend(googleAuth.idToken!); // Send token to backend
                 
@@ -58,7 +57,7 @@ class GoogleSignInService {
       if (response.statusCode == 200) {
         print('Token sent to backend successfully');
         // You can verify the token here if needed
-        await verifyToken(idToken);
+        // await verifyToken(idToken);
       } else {
         print('Failed to send token to backend. Status code: ${response.statusCode}');
       }
@@ -68,32 +67,32 @@ class GoogleSignInService {
   }
 
   // Function to verify Google ID Token
-  Future<void> verifyToken(String idToken) async {
-    try {
-      final url = Uri.parse('https://oauth2.googleapis.com/tokeninfo?id_token=$idToken');
-      // print("verify");
-      // print("Test-----------$idToken");
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        // Check if token is valid
-        if (data['aud'] == webClientId) {
-          // Token is valid, you can retrieve user information from data
-          print('Token is valid');
-          // print('User email: ${data['email']}');
-          // Add other user information retrieval here
-        } else {
-          // Token is not valid for your application
-          print('Invalid token');
-        }
-      } else {
-        // Failed to verify token
-        print('Failed to verify token');
-      }
-    } catch (error) {
-      print('Error verifying token: $error');
-    }
-  }
+  // Future<void> verifyToken(String idToken) async {
+  //   try {
+  //     final url = Uri.parse('https://oauth2.googleapis.com/tokeninfo?id_token=$idToken');
+  //     // print("verify");
+  //     // print("Test-----------$idToken");
+  //     final response = await http.get(url);
+  //     if (response.statusCode == 200) {
+  //       final Map<String, dynamic> data = json.decode(response.body);
+  //       // Check if token is valid
+  //       if (data['aud'] == webClientId) {
+  //         // Token is valid, you can retrieve user information from data
+  //         print('Token is valid');
+  //         // print('User email: ${data['email']}');
+  //         // Add other user information retrieval here
+  //       } else {
+  //         // Token is not valid for your application
+  //         print('Invalid token');
+  //       }
+  //     } else {
+  //       // Failed to verify token
+  //       print('Failed to verify token');
+  //     }
+  //   } catch (error) {
+  //     print('Error verifying token: $error');
+  //   }
+  // }
  
 
   // Function to get Google ID Token
