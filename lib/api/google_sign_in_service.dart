@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:geocoding/geocoding.dart';
 
 class GoogleSignInService {
   final String webClientId; // Google Web Client ID
@@ -13,19 +14,22 @@ class GoogleSignInService {
   late final GoogleSignIn _googleSignIn; // Google Sign-In instance
 
   GoogleSignInService(this.webClientId, this.backendUrl) {
-    _googleSignIn = GoogleSignIn(clientId: webClientId); // Initialize Google Sign-In
+    _googleSignIn =
+        GoogleSignIn(clientId: webClientId); // Initialize Google Sign-In
   }
 
   // Function to sign in with Google
   Future<GoogleSignInAccount?> signIn() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn(); // Sign in
+      final GoogleSignInAccount? googleUser =
+          await _googleSignIn.signIn(); // Sign in
       if (googleUser != null) {
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
         // print("Google ID Token: ${googleAuth.idToken}"); // Log the Google ID Token
 
         await sendTokenToBackend(googleAuth.idToken!); // Send token to backend
-                
+
         // print("Google ID Token----------: ${googleAuth.idToken}"); // Log the Google ID Token
       }
       return googleUser;
@@ -59,7 +63,8 @@ class GoogleSignInService {
         // You can verify the token here if needed
         // await verifyToken(idToken);
       } else {
-        print('Failed to send token to backend. Status code: ${response.statusCode}');
+        print(
+            'Failed to send token to backend. Status code: ${response.statusCode}');
       }
     } catch (error) {
       print('Error sending token to backend: $error');
@@ -111,7 +116,7 @@ class GoogleSignInService {
     return null;
   }
 
- Future<Position?> getCurrentLocation() async {
+  Future<String?> getCurrentLocation() async {
     try {
       bool serviceEnabled;
       LocationPermission permission;
@@ -126,7 +131,8 @@ class GoogleSignInService {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.deniedForever) {
-          print('Location permissions are permanently denied, we cannot request permissions.');
+          print(
+              'Location permissions are permanently denied, we cannot request permissions.');
           return null;
         }
 
@@ -134,12 +140,31 @@ class GoogleSignInService {
           print('Location permissions are denied (actual value: $permission)');
           return null;
         }
-      } 
+      }
 
-      if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+      if (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always) {
         Position position = await Geolocator.getCurrentPosition();
         print("Location : ---- $position");
-        return position;
+
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+            position.latitude, position.longitude);
+        if (placemarks.isNotEmpty) {
+          Placemark place = placemarks.first;
+          String area = place.subLocality ?? "Unknown";
+          String city = place.locality ?? "Unknown";
+          String location = place.name ?? "Unknown";
+         String state = place.administrativeArea ?? "Unknown";
+  String country = place.country ?? "Unknown";
+
+          print("Area:------- Area: $area, City: $city, Location: $location,State: $state, Country: $country ");
+          return 'Area: $area, City: $city, Location: $location, State: $state, Country: $country';
+        } else {
+          return null;
+
+
+
+        }
       }
     } catch (error) {
       print('Error getting current location: $error');
@@ -147,4 +172,3 @@ class GoogleSignInService {
     return null;
   }
 }
-
