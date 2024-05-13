@@ -70,22 +70,11 @@ class _MyHomePageState extends State<MyHomePage> {
     location = location_lib.Location();
   }
 
-  void getCurrentLocation() async {
+  Future<void> getCurrentLocation() async {
     try {
       currentLocation = await location.getLocation();
       setState(() {
-        markers.clear(); // Clear existing markers
-        markers.add(
-          Marker(
-            markerId: MarkerId("current_location"),
-            position: LatLng(
-              currentLocation!.latitude!,
-              currentLocation!.longitude!,
-            ),
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed), // Blue marker for current location
-            infoWindow: InfoWindow(title: "Current Location"),
-          ),
-        );
+        updateMarkers();
       });
       print(currentLocation);
     } catch (e) {
@@ -93,89 +82,103 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  void updateMarkers() {
+    markers.clear();
+    if (currentLocation != null) {
+      markers.add(
+        Marker(
+          markerId: MarkerId("current_location"),
+          position: LatLng(
+            currentLocation!.latitude!,
+            currentLocation!.longitude!,
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          infoWindow: InfoWindow(title: "Current Location"),
+        ),
+      );
+    }
+  }
+
   void onTapLocation(LatLng point) {
     setState(() {
-      // Clear existing markers
       markers.clear();
-      // Add new marker at tapped location
       markers.add(
         Marker(
           markerId: MarkerId("tapped_location"),
           position: point,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed), // Red marker for tapped location
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
           infoWindow: InfoWindow(title: "Tapped Location"),
         ),
       );
       tappedPoint = point;
     });
-    // Print latitude and longitude to the console
     print('Tapped Location: ${point.latitude}, ${point.longitude}');
   }
 
-  Future<Widget> getAddressFromLatLng(LatLng position) async {
-    try {
-      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-      Placemark place = placemarks[0];
-      return AlertDialog(
-        title: Text("Location Details"),
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('location: ${place.name}'),
-            Text('Area:${place.subLocality}'),
-            Text('City: ${place.locality}'),
-            Text('State: ${place.administrativeArea}'),
-            Text('Country: ${place.country}'),
-            Text('Latitude: ${position.latitude}'),
-          Text('Longitude: ${position.longitude}'),
-          ],
-        ),
-        actions: <Widget>[
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('Close'),
-          ),
-        ],
-      );
-    } catch (e) {
-      print("Failed to get address: $e");
-      return AlertDialog(
-        title: Text("Error"),
-        content: Text("Failed to get address: $e"),
-        actions: <Widget>[
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('Close'),
-          ),
-        ],
-      );
-    }
-  }
-
-  void submitLocation() {
+  Future<void> submitLocation() async {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return FutureBuilder(
-          future: getAddressFromLatLng(tappedPoint),
-          builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return snapshot.data!;
-            } else {
-              return AlertDialog(
-                title: Text("Loading..."),
-                content: CircularProgressIndicator(),
-              );
-            }
-          },
+        return AlertDialog(
+          title: Text("Loading..."),
+          content: CircularProgressIndicator(),
         );
       },
     );
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(tappedPoint.latitude, tappedPoint.longitude);
+      Placemark place = placemarks[0];
+      Navigator.pop(context); // Dismiss loading dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Location Details"),
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Location: ${place.name}'),
+                Text('Area: ${place.subLocality}'),
+                Text('City: ${place.locality}'),
+                Text('State: ${place.administrativeArea}'),
+                Text('Country: ${place.country}'),
+                Text('Latitude: ${tappedPoint.latitude}'),
+                Text('Longitude: ${tappedPoint.longitude}'),
+              ],
+            ),
+            actions: <Widget>[
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      print("Failed to get address: $e");
+      Navigator.pop(context); // Dismiss loading dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Error"),
+            content: Text("Failed to get address: $e"),
+            actions: <Widget>[
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   @override
